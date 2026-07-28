@@ -18,7 +18,7 @@ import type {
   Unsubscribe,
   BrowserAdapter,
   MentionQuery,
-} from './types';
+} from './types.js';
 
 /**
  * Fully-typed overloads for the diosc() command-queue function.

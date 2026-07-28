@@ -17,8 +17,8 @@
  * components, not as a bare client method. See the DioscHub docs.
  */
 
-import type { DioscFunction } from './globals';
-import { loadDiosc } from './loader';
+import type { DioscFunction } from './globals.js';
+import { loadDiosc } from './loader.js';
 import type {
   DioscConfig,
   BrowserToolHandler,
@@ -30,7 +30,7 @@ import type {
   EventHandler,
   WildcardEventHandler,
   Unsubscribe,
-} from './types';
+} from './types.js';
 
 export type WidgetPosition = 'bottom-left' | 'bottom-right';
 

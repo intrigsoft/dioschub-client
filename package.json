@@ -1,6 +1,6 @@
 {
   "name": "@dioschub/client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Client SDK for the DioscHub Assistant Kit — script loader and typed command API (createDiosc).",
   "license": "MIT",
   "type": "module",

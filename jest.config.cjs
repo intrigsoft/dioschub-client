@@ -22,5 +22,10 @@ module.exports = {
     ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  // Source uses explicit `.js` extensions on relative imports (Node-ESM valid in
+  // the published dist); strip them so ts-jest resolves the `.ts` sources.
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 };

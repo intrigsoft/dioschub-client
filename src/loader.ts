@@ -6,7 +6,7 @@
  * the script finishes loading are buffered and replayed.
  */
 
-import type { DioscFunction } from './globals';
+import type { DioscFunction } from './globals.js';
 
 /** Options for {@link loadDiosc} */
 export interface LoadDioscOptions {

@@ -36,13 +36,13 @@ export type {
   JsonSchema,
   MentionItem,
   MentionQuery,
-} from './types';
+} from './types.js';
 
 // DioscFunction overloads (re-exported from globals)
-export type { DioscFunction, DioscEngineHandle } from './globals';
+export type { DioscFunction, DioscEngineHandle } from './globals.js';
 
 // Typed instance API (the supported entry point)
-export { createDiosc } from './create-diosc';
+export { createDiosc } from './create-diosc.js';
 export type {
   CreateDioscOptions,
   DioscInstance,
@@ -51,11 +51,11 @@ export type {
   DioscIdentity,
   SendOptions,
   WidgetPosition,
-} from './create-diosc';
+} from './create-diosc.js';
 
 // Script loader
-export { loadDiosc } from './loader';
-export type { LoadDioscOptions, LoadDioscResult } from './loader';
+export { loadDiosc } from './loader.js';
+export type { LoadDioscOptions, LoadDioscResult } from './loader.js';
 
 // Side-effect: pull in global augmentations (Window, JSX)
-import './globals';
+import './globals.js';
