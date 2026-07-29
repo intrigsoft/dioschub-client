@@ -214,26 +214,31 @@ diosc.extend.browser({
 });
 ```
 
-#### Custom approval UI
+#### Custom consensus view — restyle the approval body
 
-The kit ships a built-in approval dialog. To render **your own**, register a
-handler. `pattern` matches the prefixed runtime tool name (e.g.
-`acme-helpdesk_create_ticket`). The handler receives the request plus bound
-`actions` it calls when a human decides:
+The kit ships the consensus (approval) dialog and always owns the decision.
+What you *can* replace is the dialog's **detail body**, per tool, so a gated
+call reads in your domain's terms instead of a generic schema form:
 
 ```ts
-const off = diosc.extend.onApproval(/acme-helpdesk_/, (approval, actions) => {
-  myModal.open(approval, {
-    onApprove: () => actions.approve(),
-    onEdit:    (args) => actions.editAndApprove(args),
-    onReject:  (reason) => actions.reject(reason),
-  });
+const off = diosc.extend.consensusView(/acme-helpdesk_/, {
+  mount(el, ctx) {
+    // `el` is a light-DOM anchor — your stylesheets apply. Portal into it from
+    // your own component tree to keep context/providers.
+    render(<TicketBody ctx={ctx} />, el);
+  },
+  update(ctx) { /* operator edited a field, or switched request */ },
+  unmount() { /* teardown */ },
 });
 ```
 
-> There is intentionally **no** `diosc.approve()` / `reject()` global. Approval
-> decisions only resolve from a surface that received the request — the built-in
-> dialog or your registered handler. This preserves the human-in-the-loop
+`ctx.fields` is the kit's computed diff (render from it, don't re-derive), and
+`ctx.setField(key, value)` reports an edit, which becomes `modifiedArgs` on
+submit. The descriptor has **no** approve/reject — see below.
+
+> There is intentionally **no** `diosc.approve()` / `reject()`, and no
+> host-rendered approval surface at all. Approval decisions resolve only from
+> the built-in consensus dialog. This preserves the human-in-the-loop
 > (Responsibility-First) guarantee.
 
 #### Navigation observer — push SPA route changes into chat
@@ -442,9 +447,10 @@ These omissions are deliberate design decisions, not gaps:
   message lists, session pickers, or the approval dialog yourself.
 - **No host session API.** `loadSession` / `startNewSession` / `renameSession` /
   etc. are driven by the kit's own session-history panel, not host code.
-- **No `approve` / `reject` global.** Approval decisions resolve only from a UI
-  surface that received the request (built-in dialog or your `onApproval`
-  handler) — Responsibility-First.
+- **No `approve` / `reject` global, and no host-rendered approval surface.**
+  Decisions resolve only from the kit's own consensus dialog. You may restyle
+  its body via `extend.consensusView` — that carries no verdict channel —
+  Responsibility-First.
 - **No auth-header / token API.** Identity is bound server-to-server via
   `bindEndpoint`. The credential-blind principle means Diosc never sees tokens.
 

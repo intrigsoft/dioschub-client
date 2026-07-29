@@ -10,7 +10,6 @@
 import type {
   DioscConfig,
   BrowserToolHandler,
-  ApprovalHandler,
   NavigationObserverCallback,
   ProtocolEventName,
   EventHandler,
@@ -18,6 +17,7 @@ import type {
   Unsubscribe,
   BrowserAdapter,
   MentionQuery,
+  ConsensusViewDescriptor,
 } from './types.js';
 
 /**
@@ -55,9 +55,16 @@ export interface DioscFunction {
    */
   (command: 'mentionProvider', query: MentionQuery | null): void;
 
-  // ── Custom approval UI ─────────────────────────────────────────────────
-  /** Register a custom approval handler. Returns an unregister fn. */
-  (command: 'approvalHandler', pattern: string | RegExp, handler: ApprovalHandler): Unsubscribe;
+  // ── Consensus views (host-authored approval bodies) ────────────────────
+  /**
+   * Render the consensus dialog's detail body for tools matching `pattern`.
+   * `null` unregisters. Returns an unregister fn.
+   */
+  (
+    command: 'consensusView',
+    pattern: string | RegExp,
+    descriptor: ConsensusViewDescriptor | null,
+  ): Unsubscribe;
 
   // ── Observers ──────────────────────────────────────────────────────────
   (command: 'observe', type: 'navigation', observer: NavigationObserverCallback): () => void;
@@ -97,11 +104,11 @@ export interface DioscFunction {
   (command: 'setPosition', position: 'bottom-left' | 'bottom-right'): void;
 
   // ── Approvals ──────────────────────────────────────────────────────────
-  // Approval decisions are NOT host commands (Responsibility-First). To render
-  // a custom approval surface, register `diosc('approvalHandler', pattern, fn)`;
-  // the handler receives bound `actions` ({ approve, editAndApprove, reject })
-  // it calls when a human decides. The built-in consensus dialog handles the
-  // default case. There is no global `diosc('approve')`.
+  // Approval decisions are NOT host commands, and there is no host path to one
+  // at all (Responsibility-First). Every approval resolves in the built-in
+  // consensus dialog. A host may restyle that dialog's body via
+  // `diosc('consensusView', pattern, descriptor)`, which carries no verdict
+  // channel by design. There is no `diosc('approve')`.
 
   // ── Stream control ─────────────────────────────────────────────────────
   (command: 'cancelStream'): void;

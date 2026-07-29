@@ -24,8 +24,8 @@ import type {
   BrowserToolHandler,
   BrowserAdapter,
   MentionQuery,
-  ApprovalHandler,
   NavigationObserverCallback,
+  ConsensusViewDescriptor,
   ProtocolEventName,
   EventHandler,
   WildcardEventHandler,
@@ -81,13 +81,21 @@ export interface DioscExtend {
   mentions(provider: MentionQuery | null): void;
   /** Set (or clear with `null`) the page snapshot + intent surface. */
   browser(adapter: BrowserAdapter | null): void;
-  /**
-   * Render a custom approval UI. `pattern` matches the prefixed runtime tool
-   * name (e.g. `acme-helpdesk_create_ticket`). Returns an unregister fn.
-   */
-  onApproval(pattern: string | RegExp, handler: ApprovalHandler): Unsubscribe;
   /** Register an SPA navigation observer. */
   observeNavigation(observer: NavigationObserverCallback): () => void;
+  /**
+   * Render the consensus dialog's detail body for tools matching `pattern`.
+   * The kit keeps the chrome (master list, banners, approve/reject, submit) and
+   * hands over only the field-rows region. Pass `null` to unregister.
+   *
+   * The descriptor cannot approve or reject — decisions stay kit-owned.
+   *
+   * @experimental Contract may change before 1.0.
+   */
+  consensusView(
+    pattern: string | RegExp,
+    descriptor: ConsensusViewDescriptor | null,
+  ): Unsubscribe;
 }
 
 /** BYOA identity binding. No auth-header / token data API by design. */
@@ -186,8 +194,8 @@ export function createDiosc(options: CreateDioscOptions): DioscInstance {
     tool: (name, handler) => void raw('tool', name, handler),
     mentions: (provider) => void raw('mentionProvider', provider),
     browser: (adapter) => void raw('browserAdapter', adapter),
-    onApproval: (pattern, handler) => raw('approvalHandler', pattern, handler),
     observeNavigation: (observer) => raw('observe', 'navigation', observer),
+    consensusView: (pattern, descriptor) => raw('consensusView', pattern, descriptor),
   };
 
   const identity: DioscIdentity = {

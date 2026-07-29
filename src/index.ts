@@ -18,9 +18,7 @@ export type {
   BrowserToolHandler,
   ApprovalRequest,
   ApprovalToolCall,
-  ApprovalActions,
   ApprovalValidationError,
-  ApprovalHandler,
   SessionEventName,
   ServerEventName,
   ProtocolEventName,
@@ -36,6 +34,10 @@ export type {
   JsonSchema,
   MentionItem,
   MentionQuery,
+  ConsensusViewDescriptor,
+  ConsensusViewCtx,
+  ConsensusField,
+  ConsensusFieldMeta,
 } from './types.js';
 
 // DioscFunction overloads (re-exported from globals)

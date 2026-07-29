@@ -122,28 +122,9 @@ export interface ApprovalRequest {
   proposedChanges?: any;
   /** Pre-fetched entity context (when configured server-side) */
   entityContext?: any;
-  /** Always true for handlers — included for parity with the engine type */
-  hasCustomHandler?: boolean;
   /** Re-prompt feedback when a prior approve/edit failed input-schema validation. */
   validationError?: ApprovalValidationError;
 }
-
-/** Bound decision callbacks passed to a custom approval handler. */
-export interface ApprovalActions {
-  approve(): void;
-  editAndApprove(modifiedArgs: Record<string, unknown>, feedback?: string): void;
-  reject(reason?: string): void;
-}
-
-/**
- * Custom approval handler. Registered via
- * `diosc('approvalHandler', pattern, handler)`. Pattern is matched against
- * the prefixed runtime tool name (e.g. `acme-helpdesk_create_ticket`).
- */
-export type ApprovalHandler = (
-  approval: ApprovalRequest,
-  actions: ApprovalActions,
-) => void;
 
 // ============================================================================
 // EVENTS
@@ -218,7 +199,6 @@ export type DioscCommand =
   | 'config'
   | 'bindHeaders'
   | 'tool'
-  | 'approvalHandler'
   | 'mentionProvider'
   | 'observe'
   | 'invoke'
@@ -244,7 +224,115 @@ export type DioscCommand =
   | 'startNewSession'
   | 'renameSession'
   | 'pinSession'
-  | 'browserAdapter';
+  | 'browserAdapter'
+  | 'consensusView';
+
+// ============================================================================
+// CONSENSUS VIEWS (host-authored approval bodies)
+// ============================================================================
+
+/**
+ * Field metadata handed to a consensus view, derived by the kit from the
+ * gated tool's input schema.
+ */
+export interface ConsensusFieldMeta {
+  key: string;
+  title: string;
+  type: string;
+  widget: string;
+  enum?: Array<{ value: unknown; label: string }>;
+  placeholder?: string;
+  unit?: string;
+  emptyLabel?: string;
+  format?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+}
+
+/**
+ * One row of the kit-computed diff.
+ *
+ * Render from this. Do NOT re-derive the diff from `request`/`previous` — the
+ * update semantics are subtle (a field absent from the proposal is UNCHANGED,
+ * not cleared) and getting them wrong misdescribes what the user is approving.
+ */
+export interface ConsensusField {
+  key: string;
+  meta: ConsensusFieldMeta;
+  /** Baseline value, from `previous`. Undefined for create. */
+  from: unknown;
+  /** Value that will be sent, including operator edits. */
+  to: unknown;
+  kind: 'same' | 'changed' | 'added' | 'removed' | 'create';
+  readOnly: boolean;
+}
+
+/**
+ * Everything a consensus view receives. One instance per request, and STABLE
+ * for that request's lifetime — mutated in place, then `update(ctx)` is called.
+ * Reactive hosts can hold it directly.
+ *
+ * Credential-blind: auth headers and tokens never reach an approval request,
+ * so there is nothing sensitive here to filter.
+ */
+export interface ConsensusViewCtx {
+  tool: string;
+  op: 'create' | 'update' | 'delete';
+  requestId: string;
+  rowId: string;
+  title: string;
+
+  /** The model's proposed tool arguments. */
+  request: Record<string, unknown>;
+  /** Companion-fetched current state. Absent for create, or if unavailable. */
+  previous?: Record<string, unknown>;
+  /** Tool that produced `previous`. */
+  companion?: string;
+
+  /** The kit's diff — authoritative. */
+  fields: ConsensusField[];
+
+  /** True for delete: the body is a read-only confirmation. */
+  readOnly: boolean;
+  flagged?: boolean;
+  flagReason?: string;
+  /**
+   * Schema-validation feedback from a previous failed edit attempt. Present when
+   * edited args were rejected server-side — surface it, or the operator will
+   * resubmit the same bad payload.
+   */
+  validationError?: ApprovalValidationError;
+
+  /** Current overrides. Read-only view — mutate via setField. */
+  edits: Record<string, unknown>;
+  /** Record an edit. Feeds the kit's ledger and becomes `modifiedArgs`. */
+  setField(key: string, value: unknown): void;
+  /** Clear every override for this request. */
+  resetEdits(): void;
+
+  /** Aborted on unmount. */
+  signal: AbortSignal;
+}
+
+/**
+ * Host-supplied lifecycle for a consensus body.
+ *
+ * A closure, not a component reference — a component class is meaningless
+ * without its framework runtime, while a closure runs in host scope and closes
+ * over whatever it needs (an Angular injector, a store, the host router).
+ *
+ * There is deliberately NO way to approve or reject from here. Decisions come
+ * only from the kit's own dialog chrome.
+ */
+export interface ConsensusViewDescriptor {
+  /** Render into `el` — a light-DOM anchor, so host CSS applies. */
+  mount(el: HTMLElement, ctx: ConsensusViewCtx): void | Promise<void>;
+  /** Same ctx identity, mutated. Called on edits and decision changes. */
+  update?(ctx: ConsensusViewCtx): void;
+  /** Tear down. `ctx.signal` is already aborted. */
+  unmount?(): void;
+}
 
 // ============================================================================
 // BROWSER ADAPTER (host-declared intent surface)

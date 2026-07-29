@@ -111,7 +111,7 @@ describe('createDiosc', () => {
   });
 
   describe('extend namespace', () => {
-    it('maps tool/mentions/browser/onApproval/observeNavigation', () => {
+    it('maps tool/mentions/browser/observeNavigation', () => {
       const d = make();
       raw.mockClear();
       const fn = jest.fn();
@@ -119,13 +119,21 @@ describe('createDiosc', () => {
       d.extend.tool('t', fn);
       d.extend.mentions(fn);
       d.extend.browser(adapter);
-      d.extend.onApproval(/acme_/, fn);
       d.extend.observeNavigation(fn);
       expect(raw).toHaveBeenCalledWith('tool', 't', fn);
       expect(raw).toHaveBeenCalledWith('mentionProvider', fn);
       expect(raw).toHaveBeenCalledWith('browserAdapter', adapter);
-      expect(raw).toHaveBeenCalledWith('approvalHandler', /acme_/, fn);
       expect(raw).toHaveBeenCalledWith('observe', 'navigation', fn);
+    });
+
+    it('maps consensusView registration and unregistration', () => {
+      const d = make();
+      raw.mockClear();
+      const descriptor = { mount: jest.fn(), update: jest.fn(), unmount: jest.fn() };
+      d.extend.consensusView(/_ticket$/, descriptor);
+      d.extend.consensusView('update_ticket', null);
+      expect(raw).toHaveBeenCalledWith('consensusView', /_ticket$/, descriptor);
+      expect(raw).toHaveBeenCalledWith('consensusView', 'update_ticket', null);
     });
   });
 
