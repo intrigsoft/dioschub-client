@@ -316,7 +316,8 @@ Subscribe with `diosc.on(event, handler)` (typed) or `diosc.onAny(handler)`.
 | `session:started` / `joined` / `loaded` / `restored` | `{ session, … }` | Session lifecycle |
 | `session:renamed` / `pinned` | `{ sessionId, … }` | Session list change |
 | `auth:refreshed` / `auth:failed` | `{ … }` | Identity bind lifecycle |
-| `files:updated` | `{ fileId?, files? }` | File set changed |
+| `files:status` | `FileStatusEvent`: `{ fileId, filename, mimeType, status, reason, warnings, progress, canRead, canSearch, isIndexed }` | A file in the user's library changed status or progress (`isIndexed` is deprecated: read `status` / `canSearch`) |
+| `files:updated` | `FilesUpdatedEvent`: `{ fileId, filename }` | A file the session uploaded finished indexing |
 | `browser:read_page` | `{ … }` | Kit requested a page snapshot |
 
 `ProtocolEventName` is the full typed union; `on()` also accepts any string for
@@ -476,6 +477,8 @@ See the DioscHub docs for the full rationale.
 `ApprovalToolCall`, `ApprovalActions`, `ApprovalValidationError`,
 `ApprovalHandler`, `SessionEventName`, `ServerEventName`, `ProtocolEventName`,
 `EventHandler`, `WildcardEventHandler`, `Unsubscribe`, `DioscCommand`,
+`FileStatus`, `FileStatusReason`, `FileStatusWarning`, `FileStatusProgress`,
+`FileStatusEvent`, `FilesUpdatedEvent`,
 `DioscFunction`, `DioscEngineHandle`, `LoadDioscOptions`, `LoadDioscResult`.
 
 ---

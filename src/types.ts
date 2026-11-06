@@ -176,7 +176,74 @@ export type ServerEventName =
   | 'approval:request'
   | 'content_blocked'
   | 'files:updated'
+  | 'files:status'
   | 'browser:read_page';
+
+// ============================================================================
+// FILE EVENTS
+// ============================================================================
+
+/**
+ * A file's status, as the hub reports it: one of six states.
+ * `canRead` / `canSearch` on the payload are derived from it by the hub.
+ */
+export type FileStatus =
+  | 'processing'
+  | 'ready'
+  | 'search_unavailable'
+  | 'no_text'
+  | 'stored_only'
+  | 'failed';
+
+/** Why a file is in its state: a fixed code with its fixed message, never raw error text. */
+export interface FileStatusReason {
+  code: string;
+  message: string;
+}
+
+/** A section the indexer skipped or read with a problem (e.g. `page_unreadable` at `page 14`). */
+export interface FileStatusWarning {
+  code: string;
+  location: string | null;
+  retryable: boolean;
+}
+
+/** Indexing progress while a file is `processing`. */
+export interface FileStatusProgress {
+  step: string;
+  done: number;
+  total: number;
+}
+
+/**
+ * Payload of `files:status`: a file in the user's library changed status or
+ * progress. Pushed to every widget the user has open on the assistant (an
+ * anonymous visitor: that session only). Carries the status, so no refetch.
+ */
+export interface FileStatusEvent {
+  fileId: string;
+  filename: string;
+  mimeType: string;
+  status: FileStatus;
+  reason: FileStatusReason | null;
+  warnings: FileStatusWarning[];
+  progress: FileStatusProgress | null;
+  /** The assistant can read the file. */
+  canRead: boolean;
+  /** `file_search` can return passages from the file. */
+  canSearch: boolean;
+  /**
+   * @deprecated Alias of `status === 'ready'` (true for a ready image, which
+   * is not searchable). Read `status` and `canSearch` instead.
+   */
+  isIndexed: boolean;
+}
+
+/** Payload of `files:updated`: a file the session uploaded finished indexing. */
+export interface FilesUpdatedEvent {
+  fileId: string;
+  filename: string;
+}
 
 /** All protocol event names (union of session + server events) */
 export type ProtocolEventName = SessionEventName | ServerEventName;
